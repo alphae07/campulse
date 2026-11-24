@@ -1,10 +1,13 @@
+// ui.js — shared helpers: icons, theme, nav, toast, modal, clipboard, saved profiles, card templates.
 import { SKILLS, SKILL_META, AVAILABLE } from './config.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 
+// Escape user text before putting it in innerHTML (prevents XSS).
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Only allow http(s) links, so a "javascript:" URL can never be clicked.
 export const safeUrl = (u) => {
   try {
     const x = new URL(u);
@@ -12,6 +15,7 @@ export const safeUrl = (u) => {
   } catch { return ''; }
 };
 
+/* ---------- Icons (tiny inline SVG set, so there are no icon libraries to load) ---------- */
 const PATHS = {
   heart: '<path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
@@ -59,7 +63,8 @@ export function initNav() {
 export function initReveal() {
   const targets = document.querySelectorAll('.reveal');
   if (!targets.length) return;
-  
+  // Keep content visible if the browser lacks IntersectionObserver. Only hide for
+  // animation after the observer is successfully initialized.
   if (!('IntersectionObserver' in window)) {
     targets.forEach((el) => el.classList.add('in'));
     return;
@@ -112,7 +117,7 @@ export function initModal() {
 /* ---------- Clipboard with instant "Copied!" feedback ---------- */
 export async function copyText(text, btn) {
   try { await navigator.clipboard.writeText(text); }
-  catch { 
+  catch { // fallback for older browsers / non-https
     const t = document.createElement('textarea');
     t.value = text; document.body.append(t); t.select(); document.execCommand('copy'); t.remove();
   }
@@ -149,7 +154,8 @@ export function animateNumber(el, to) {
   requestAnimationFrame(tick);
 }
 
-
+/* ---------- Profile card pieces ---------- */
+// No image URL? We use a stable stand-in based on the student's id. A broken image falls back to a colour block.
 export const avatarOf = (p) => safeUrl(p.avatar_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.full_name || 'Student')}&background=2340ff&color=ffffff&size=240&bold=true`; 
 export const coverOf = (p) => safeUrl(p.cover_url) || SKILL_META[p.skill]?.img || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85';
 
@@ -209,6 +215,8 @@ export function showProfileModal(p) {
     </div>`);
 }
 
+// Event delegation: ONE listener per container handles every card's buttons.
+// `lookup(id)` returns the profile object for a card id.
 export function bindCardActions(root, lookup) {
   root.addEventListener('click', (e) => {
     const v = e.target.closest('[data-view]');
@@ -220,7 +228,7 @@ export function bindCardActions(root, lookup) {
       const on = toggleSaved(f.dataset.fav);
       f.classList.toggle('on', on);
       f.setAttribute('aria-pressed', on);
-      f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');  
+      f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');   // restart the pop animation
     }
   });
 }

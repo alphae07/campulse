@@ -1,18 +1,21 @@
+// directory.js — everything data-driven on the landing page:
+// skill tiles, spotlight row, stats, search, filters, sorting, saved profiles, the card grid.
 import { supabase } from './supabaseClient.js';
 import { SKILLS, SKILL_META, AVAILABLE, SUPABASE_CONFIGURED } from './config.js';
 import { $, esc, profileCard, skeletons, bindCardActions, animateNumber, toast, getSaved, coverOf, badge } from './ui.js';
 
-let all = [];                          
+let all = [];                                      // every profile from the database
 const state = { q: '', skill: new URLSearchParams(location.search).get('skill') || 'All', onlyAvail: false, saved: false, sort: 'new' };
 const lookup = (id) => all.find((p) => p.id === id);
 
 export function initDirectory() {
- 
+  // Filter pills
   if ($('#pills')) {
     $('#pills').innerHTML = ['All', ...SKILLS].map((s) => `<button class="pill${s === state.skill ? ' active' : ''}" data-skill="${esc(s)}">${esc(s)}</button>`).join('');
     $('#pills').addEventListener('click', (e) => { const b = e.target.closest('.pill'); if (b) setSkill(b.dataset.skill); });
   }
 
+  // "Pick a skill" tiles (counts are filled in after the data loads)
   if ($('#tiles')) { $('#tiles').innerHTML = SKILLS.map((s) => `
     <button class="tile" data-skill="${esc(s)}" style="--tc:${SKILL_META[s].color}">
       <img src="${esc(SKILL_META[s].img)}" alt="" loading="lazy" onerror="this.remove()">
@@ -23,17 +26,18 @@ export function initDirectory() {
     location.href = `directory.html?skill=${encodeURIComponent(t.dataset.skill)}`;
   }); }
 
+  // Scrolling ticker (the list is doubled so the loop is seamless)
   const star = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 1l2.6 7.4L22 11l-7.4 2.6L12 21l-2.6-7.4L2 11l7.4-2.6z" fill="currentColor"/></svg>';
   const words = [...SKILLS, 'Linked to a matric number', 'Say hi on WhatsApp'];
   const row = words.map((w) => `<span>${esc(w)}</span>${star}`).join('');
   if ($('#ticker')) $('#ticker').innerHTML = row + row;
 
-
+  // Controls
   $('#search')?.addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
   $('#onlyAvail')?.addEventListener('change', (e) => { state.onlyAvail = e.target.checked; render(); });
   $('#onlySaved')?.addEventListener('change', (e) => { state.saved = e.target.checked; render(); });
   $('#sort')?.addEventListener('change', (e) => { state.sort = e.target.value; render(); });
-  $('#grid')?.addEventListener('click', (e) => { if (e.target.closest('[data-reset]')) resetFilters(); });
+  $('#grid')?.addEventListener('click', (e) => { if (e.target.closest('[data-reset]')) resetFilters(); if (e.target.closest('[data-retry-directory]')) loadDirectory(); });
   addEventListener('saved-change', () => { updateSavedCount(); if (state.saved) render(); });
 
   if ($('#grid')) bindCardActions($('#grid'), lookup);
@@ -56,12 +60,15 @@ function resetFilters() {
 
 function updateSavedCount() { $('#savedCount').textContent = getSaved().length; }
 
+// Called every time the landing page opens, so edits made in the dashboard show up.
 export async function loadDirectory() {
   if ($('#grid')) $('#grid').innerHTML = skeletons(6);
+  if ($('#previewGrid')) $('#previewGrid').innerHTML = skeletons(3);
   if (!SUPABASE_CONFIGURED) {
     all = [];
-    if ($('#grid')) $('#grid').innerHTML = `<div class="empty"><p>Connect Campulse to Supabase in js/config.js to load student profiles. The landing page content is available without this connection.</p></div>`;
-    if ($('#previewGrid')) $('#previewGrid').innerHTML = `<div class="empty"><p>Student profiles will appear here once Supabase is configured.</p></div>`;
+    const setupMessage = `<div class="empty"><p>Student profiles will show here once Campulse is connected to Supabase. Add your project URL and anon key in <code>js/config.js</code>.</p></div>`;
+    if ($('#grid')) $('#grid').innerHTML = setupMessage;
+    if ($('#previewGrid')) $('#previewGrid').innerHTML = setupMessage;
     if ($('#statTotal')) $('#statTotal').textContent = '0';
     if ($('#statAvail')) $('#statAvail').textContent = '0';
     if ($('#stickAvail')) $('#stickAvail').textContent = '0';
@@ -69,26 +76,45 @@ export async function loadDirectory() {
     if ($('#spotWrap')) $('#spotWrap').hidden = true;
     return;
   }
-  if ($('#previewGrid')) $('#previewGrid').innerHTML = skeletons(3);
-  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-  if (error) {
-    if ($('#grid')) $('#grid').innerHTML = `<p class="empty">Couldn't load talent. Check the Supabase URL and key in config.js.</p>`;
-    return toast(error.message, 'err');
+
+  try {
+    // Fetch the full directory and the landing-page preview independently. The preview
+    // is capped at three and ordered newest-first, so it isn't dependent on client slicing.
+    const [directoryResult, previewResult] = await Promise.all([
+      supabase.from('profiles').select('*').order('created_at', { ascending: false, nullsFirst: false }),
+      supabase.from('profiles').select('*').order('created_at', { ascending: false, nullsFirst: false }).limit(3)
+    ]);
+    const error = directoryResult.error || previewResult.error;
+    if (error) throw error;
+
+    all = Array.isArray(directoryResult.data) ? directoryResult.data : [];
+    const newest = Array.isArray(previewResult.data) ? previewResult.data : [];
+    const open = all.filter((p) => p.availability === AVAILABLE);
+    if ($('#statTotal')) animateNumber($('#statTotal'), all.length);
+    if ($('#statAvail')) animateNumber($('#statAvail'), open.length);
+    if ($('#stickAvail')) $('#stickAvail').textContent = open.length;
+    SKILLS.forEach((s) => {
+      const n = all.filter((p) => p.skill === s).length;
+      const countEl = $(`[data-count="${s}"]`); if (countEl) countEl.textContent = `${n} ${n === 1 ? 'creator' : 'creators'}`;
+    });
+    if ($('#spotWrap')) renderSpotlight(open);
+    if ($('#previewGrid')) {
+      $('#previewGrid').innerHTML = newest.length
+        ? newest.map((p, i) => profileCard(p, i)).join('')
+        : `<div class="empty"><p>No student profiles yet. Be the first to create a Campulse profile.</p><a class="btn primary" href="signup.html">Create a profile</a></div>`;
+    }
+    render();
+  } catch (err) {
+    console.error('[Campulse] Directory loading failed:', err);
+    const errorMessage = `<div class="empty"><p>We couldn't load student profiles right now. Please check your connection and try again.</p><button class="btn ghost" data-retry-directory>Try again</button></div>`;
+    if ($('#grid')) $('#grid').innerHTML = errorMessage;
+    if ($('#previewGrid')) $('#previewGrid').innerHTML = errorMessage;
+    if ($('#previewGrid')) $('#previewGrid').onclick = (e) => { if (e.target.closest('[data-retry-directory]')) loadDirectory(); };
+    toast('Unable to load Campulse profiles. Check your Supabase setup and connection.', 'err');
   }
-  all = data;
-  const open = all.filter((p) => p.availability === AVAILABLE);
-  if ($('#statTotal')) animateNumber($('#statTotal'), all.length);
-  if ($('#statAvail')) animateNumber($('#statAvail'), open.length);
-  if ($('#stickAvail')) $('#stickAvail').textContent = open.length;
-  SKILLS.forEach((s) => {
-    const n = all.filter((p) => p.skill === s).length;
-    const countEl = $(`[data-count="${s}"]`); if (countEl) countEl.textContent = `${n} ${n === 1 ? 'creator' : 'creators'}`;
-  });
-  if ($('#spotWrap')) renderSpotlight(open);
-  if ($('#previewGrid')) $('#previewGrid').innerHTML = all.slice(0, 3).map((p, i) => profileCard(p, i)).join('');   
-  render();
 }
 
+// "Open for gigs this week": big poster cards for people who are free right now.
 function renderSpotlight(open) {
   if (!$('#spotWrap') || !$('#spot')) return;
   $('#spotWrap').hidden = !open.length;
@@ -112,7 +138,7 @@ function render() {
   if ($('#count')) $('#count').textContent = `${list.length} ${list.length === 1 ? 'creator' : 'creators'}`;
   if (!$('#grid')) return;
   $('#grid').innerHTML = list.length
-    ? list.map((p, i) => profileCard(p, i)).join('')        
+    ? list.map((p, i) => profileCard(p, i)).join('')        // --i drives the staggered entrance delay
     : `<div class="empty"><p>${state.saved ? 'Nothing saved yet. Tap the heart on a card to keep someone for later.' : 'Nobody matches that search.'}</p>
        <button class="btn ghost" data-reset>Clear filters</button></div>`;
 }

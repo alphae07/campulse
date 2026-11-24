@@ -1,10 +1,11 @@
-
+// auth.js — sign up, log in (email OR matric number), sign out.
 import { supabase } from './supabaseClient.js';
 import { $, toast, busy } from './ui.js';
 
 export function initAuth() {
   $('#signupForm')?.addEventListener('submit', onSignup);
   $('#loginForm')?.addEventListener('submit', onLogin);
+  // Any element with data-signout (nav button, dashboard button) signs the user out.
   document.addEventListener('click', (e) => { if (e.target.closest('[data-signout]')) logout(); });
 }
 
@@ -19,7 +20,9 @@ async function onSignup(e) {
   if (!/^\+?\d[\d\s-]{7,}$/.test(f.whatsapp.trim())) return toast('Enter a valid WhatsApp number, e.g. +234 801 234 5678.', 'err');
 
   busy(btn, true);
- const { email, password, ...meta } = f;
+  // Everything except email/password travels as metadata; a database trigger turns it
+  // into the `profiles` row (id = the new user's auth id). See supabase/schema.sql.
+  const { email, password, ...meta } = f;
   const { data, error } = await supabase.auth.signUp({ email, password, options: { data: meta } });
   busy(btn, false);
 
@@ -28,7 +31,7 @@ async function onSignup(e) {
     return toast(dup ? 'That matric number is already registered.' : error.message, 'err');
   }
   form.reset();
-  if (!data.session) {                   
+  if (!data.session) {                       // "Confirm email" is ON in Supabase
     toast('Almost there! Confirm your email, then log in.');
     location.href = 'login.html';
   } else {
@@ -45,6 +48,7 @@ async function onLogin(e) {
 
   let email = identifier.trim();
   if (!email.includes('@')) {
+    // Matric number → ask the database (safe RPC function) for the matching email.
     const { data, error } = await supabase.rpc('email_for_matric', { p_matric: email });
     if (error || !data) { busy(btn, false); return toast('Wrong matric number or password.', 'err'); }
     email = data;
