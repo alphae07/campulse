@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html data-theme="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/><title>Campulse</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=JetBrains+Mono:wght@500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="css/styles.css" rel="stylesheet"/><script>document.documentElement.dataset.theme=localStorage.getItem("campulse-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script></head><body><svg aria-hidden="true" height="0" style="position:absolute" width="0"><symbol id="logo" viewbox="0 0 40 40">
+<rect fill="#2340ff" height="40" rx="11" width="40"></rect>
+<path d="M6 22h7l3-9 5 17 4-12 2 4h7" fill="none" stroke="#ffd23f" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"></path>
+</symbol></svg><header class="nav">
+<div class="wrap">
+<a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<nav aria-label="Main" class="links">
+<a data-route="explore" href="index.html">Home</a>
+<a data-route="directory" href="directory.html">Directory</a>
+<a data-scroll="how" href="index.html#how">How it works</a>
+<a data-scroll="faq" href="index.html#faq">FAQ</a>
+<span id="navAuth"></span>
+</nav>
+<button class="icon-btn" id="themeBtn"></button>
+<button aria-expanded="false" aria-label="Menu" class="icon-btn" id="menuBtn"></button>
+</div>
+</header><main class="wrap"><section class="auth" id="login">
+<div class="auth-card slim">
+<aside class="auth-art">
+<a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<p class="quote">Your next gig might already be waiting in your WhatsApp.</p>
+<div class="mini">
+<img alt="" loading="lazy" src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1200&q=85"/>
+<img alt="" loading="lazy" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=85"/>
+</div>
+</aside>
+<div class="auth-main">
+<h1>Welcome back</h1>
+<p class="muted">Log in with your email or your matric number.</p>
+<form class="form" id="loginForm">
+<label>Email or matric number<input autocomplete="username" name="identifier" placeholder="you@university.edu or 24/CS/0418" required=""/></label>
+<label>Password<input autocomplete="current-password" name="password" required="" type="password"/></label>
+<button class="btn primary wide" type="submit">Log in</button>
+<p class="switch-line">New here? <a href="signup.html">Create a profile</a></p>
+</form>
+</div>
+</div>
+</section></main><footer class="foot">
+<div class="wrap foot-grid">
+<div><a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<p>Discover &amp; hire verified student talent on campus.</p></div>
+<div><h4>Explore</h4><a href="directory.html">All creators</a><a data-scroll="skills" href="index.html#skills">Skills</a><a data-scroll="faq" href="index.html#faq">FAQ</a></div>
+<div><h4>Join in</h4><a href="signup.html">Create a profile</a><a href="login.html">Log in</a></div>
+<p class="fine">Made on campus, for campus.</p>
+</div>
+</footer><div aria-modal="true" class="modal" id="modal" role="dialog"><div class="sheet" id="modalBody"></div></div><div class="toast" id="toast" role="status"></div><script src="js/app.js" type="module"></script></body></html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html data-theme="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/><title>Campulse</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=JetBrains+Mono:wght@500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="css/styles.css" rel="stylesheet"/><script>document.documentElement.dataset.theme=localStorage.getItem("campulse-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script></head><body><svg aria-hidden="true" height="0" style="position:absolute" width="0"><symbol id="logo" viewbox="0 0 40 40">
+<rect fill="#2340ff" height="40" rx="11" width="40"></rect>
+<path d="M6 22h7l3-9 5 17 4-12 2 4h7" fill="none" stroke="#ffd23f" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"></path>
+</symbol></svg><header class="nav">
+<div class="wrap">
+<a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<nav aria-label="Main" class="links">
+<a data-route="explore" href="index.html">Home</a>
+<a data-route="directory" href="directory.html">Directory</a>
+<a data-scroll="how" href="index.html#how">How it works</a>
+<a data-scroll="faq" href="index.html#faq">FAQ</a>
+<span id="navAuth"></span>
+</nav>
+<button class="icon-btn" id="themeBtn"></button>
+<button aria-expanded="false" aria-label="Menu" class="icon-btn" id="menuBtn"></button>
+</div>
+</header><main class="wrap"><section class="" id="dashboard">
+<div class="dash-head">
+<div><h1>My Dashboard</h1><p class="lead-dark" id="dashHi"></p></div>
+<button class="btn" data-signout="">Sign out</button>
+</div>
+<div class="dash-grid">
+<div>
+<h2 class="sec">How your card looks</h2>
+<div id="dashPreview"></div>
+</div>
+<div class="dash-side">
+<div class="panel avail">
+<div><h3>Availability</h3><p class="muted">Tell campus if you're taking on work.</p><b id="availLabel"></b></div>
+<label class="switch"><input aria-label="Available for gigs" id="availToggle" type="checkbox"/><span></span></label>
+</div>
+<div class="panel">
+<div class="meter-head"><h3>Profile strength</h3><b id="meterPct">0%</b></div>
+<div class="meter"><span id="meterBar"></span></div>
+<p class="muted" id="meterTip"></p>
+</div>
+</div>
+</div>
+<div class="head edit-head"><h2>Edit profile</h2><button class="link-danger" id="deleteBtn">Delete profile</button></div>
+<form class="panel form" id="editForm">
+<p class="muted">Matric number: <span class="mono" id="matricShown"></span></p>
+<div class="fields">
+<label>Full name<input minlength="2" name="full_name" required=""/></label>
+<label>Skill<select name="skill"></select></label>
+<label class="full">Short bio<textarea maxlength="300" minlength="10" name="bio" required="" rows="3"></textarea></label>
+<label>Work link<input name="work_link" placeholder="https://" type="url"/></label>
+<label>WhatsApp number<input name="whatsapp" required=""/></label>
+<label>Availability<select name="availability"><option>Available for Gigs</option><option>Busy with Exams</option></select></label>
+<label>Profile photo URL<input name="avatar_url" placeholder="https://" type="url"/></label>
+<label class="full">Cover image URL<input name="cover_url" placeholder="https://" type="url"/></label>
+</div>
+<button class="btn primary wide" type="submit">Save changes</button>
+</form>
+</section></main><footer class="foot">
+<div class="wrap foot-grid">
+<div><a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<p>Discover &amp; hire verified student talent on campus.</p></div>
+<div><h4>Explore</h4><a href="directory.html">All creators</a><a data-scroll="skills" href="index.html#skills">Skills</a><a data-scroll="faq" href="index.html#faq">FAQ</a></div>
+<div><h4>Join in</h4><a href="signup.html">Create a profile</a><a href="login.html">Log in</a></div>
+<p class="fine">Made on campus, for campus.</p>
+</div>
+</footer><div aria-modal="true" class="modal" id="modal" role="dialog"><div class="sheet" id="modalBody"></div></div><div class="toast" id="toast" role="status"></div><script src="js/app.js" type="module"></script></body></html>

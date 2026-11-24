@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html data-theme="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/><title>Campulse</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=JetBrains+Mono:wght@500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="css/styles.css" rel="stylesheet"/><script>document.documentElement.dataset.theme=localStorage.getItem("campulse-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script></head><body><svg aria-hidden="true" height="0" style="position:absolute" width="0"><symbol id="logo" viewbox="0 0 40 40">
+<rect fill="#2340ff" height="40" rx="11" width="40"></rect>
+<path d="M6 22h7l3-9 5 17 4-12 2 4h7" fill="none" stroke="#ffd23f" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"></path>
+</symbol></svg><header class="nav">
+<div class="wrap">
+<a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<nav aria-label="Main" class="links">
+<a data-route="explore" href="index.html">Home</a>
+<a data-route="directory" href="directory.html">Directory</a>
+<a data-scroll="how" href="index.html#how">How it works</a>
+<a data-scroll="faq" href="index.html#faq">FAQ</a>
+<span id="navAuth"></span>
+</nav>
+<button class="icon-btn" id="themeBtn"></button>
+<button aria-expanded="false" aria-label="Menu" class="icon-btn" id="menuBtn"></button>
+</div>
+</header><main class="wrap"><section class="auth" id="signup">
+<div class="auth-card">
+<aside class="auth-art">
+<a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<p class="quote">Your work is already good. Let the right people find it.</p>
+<div class="mini">
+<img alt="" loading="lazy" src="https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=1200&q=85"/>
+<img alt="" loading="lazy" src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=1200&q=85"/>
+</div>
+</aside>
+<div class="auth-main">
+<h1>Get listed on campulse</h1>
+<p class="muted">Takes about two minutes. Your card goes live right away.</p>
+<form class="form" id="signupForm">
+<div class="fields">
+<label>Full name<input autocomplete="name" minlength="2" name="full_name" placeholder="Amina Yusuf" required=""/></label>
+<label>Matric number<input class="mono-in" name="matric_no" placeholder="24/CS/0418" required=""/></label>
+<label>Email<input autocomplete="email" name="email" placeholder="you@university.edu" required="" type="email"/></label>
+<label>Password<input autocomplete="new-password" minlength="8" name="password" placeholder="8 characters or more" required="" type="password"/></label>
+<label>Skill<select id="suSkill" name="skill"></select></label>
+<label>Availability<select name="availability"><option>Available for Gigs</option><option>Busy with Exams</option></select></label>
+<label class="full">Short bio<textarea maxlength="300" minlength="10" name="bio" placeholder="What do you make, and what kind of work do you enjoy?" required="" rows="3"></textarea></label>
+<label>Work link<input name="work_link" placeholder="https://github.com/you" type="url"/></label>
+<label>WhatsApp number<input autocomplete="tel" name="whatsapp" placeholder="+234 800 000 0000" required=""/></label>
+<label>Profile photo URL <small>optional</small><input name="avatar_url" placeholder="https://" type="url"/></label>
+<label>Cover image URL <small>optional, 16:9 works best</small><input name="cover_url" placeholder="https://" type="url"/></label>
+</div>
+<button class="btn primary wide" type="submit">Create my profile</button>
+<p class="switch-line">Already listed? <a href="login.html">Log in</a></p>
+</form>
+</div>
+</div>
+</section></main><footer class="foot">
+<div class="wrap foot-grid">
+<div><a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<p>Discover &amp; hire verified student talent on campus.</p></div>
+<div><h4>Explore</h4><a href="directory.html">All creators</a><a data-scroll="skills" href="index.html#skills">Skills</a><a data-scroll="faq" href="index.html#faq">FAQ</a></div>
+<div><h4>Join in</h4><a href="signup.html">Create a profile</a><a href="login.html">Log in</a></div>
+<p class="fine">Made on campus, for campus.</p>
+</div>
+</footer><div aria-modal="true" class="modal" id="modal" role="dialog"><div class="sheet" id="modalBody"></div></div><div class="toast" id="toast" role="status"></div><script src="js/app.js" type="module"></script></body></html>

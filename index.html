@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html data-theme="light" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1" name="viewport"/><title>Campulse</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=JetBrains+Mono:wght@500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="css/styles.css" rel="stylesheet"/><script>document.documentElement.dataset.theme=localStorage.getItem("campulse-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");</script></head><body><svg aria-hidden="true" height="0" style="position:absolute" width="0"><symbol id="logo" viewbox="0 0 40 40">
+<rect fill="#2340ff" height="40" rx="11" width="40"></rect>
+<path d="M6 22h7l3-9 5 17 4-12 2 4h7" fill="none" stroke="#ffd23f" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"></path>
+</symbol></svg><header class="nav">
+<div class="wrap">
+<a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<nav aria-label="Main" class="links">
+<a data-route="explore" href="index.html">Home</a>
+<a data-route="directory" href="directory.html">Directory</a>
+<a data-scroll="how" href="index.html#how">How it works</a>
+<a data-scroll="faq" href="index.html#faq">FAQ</a>
+<span id="navAuth"><a href="login.html">Log in</a><a class="btn sun" href="signup.html">Join campulse</a></span>
+</nav>
+<button class="icon-btn" id="themeBtn"></button>
+<button aria-expanded="false" aria-label="Menu" class="icon-btn" id="menuBtn"></button>
+</div>
+</header><main class="wrap"><section id="explore">
+<div class="hero">
+<div class="hero-copy">
+<h1>Hire the student who already does it well.</h1>
+<p class="lead">Discover &amp; hire verified student talent on campus. Logos, edits, websites, shoots and tutoring from people you might already sit next to in lectures.</p>
+<div class="hero-cta">
+<a class="btn sun" href="directory.html">Browse talent</a>
+<a class="btn" href="signup.html">List your skill</a>
+</div>
+<dl class="hero-stats">
+<div><dt id="statTotal">0</dt><dd>creators</dd></div>
+<div><dt id="statAvail">0</dt><dd>free for gigs</dd></div>
+<div><dt>5</dt><dd>skills</dd></div>
+</dl>
+</div>
+<div aria-hidden="true" class="collage">
+<figure class="polaroid p1" style="--rot:-5deg"><img alt="" src="https://images.unsplash.com/photo-1694175271713-a6e2cc378980?auto=format&fit=crop&w=1200&q=85"/><figcaption>brand kit, Tomiwa</figcaption></figure>
+<figure class="polaroid p2" style="--rot:4deg"><img alt="" src="https://images.unsplash.com/photo-1773921404238-df0227d74be9?auto=format&fit=crop&w=1200&q=85"/><figcaption>convocation, Funke</figcaption></figure>
+<figure class="polaroid p3" style="--rot:-1.5deg"><img alt="" src="https://images.unsplash.com/photo-1788626003925-5872c389457b?auto=format&fit=crop&w=1200&q=85"/><figcaption>the recap cut, Emeka</figcaption></figure>
+<span class="blob s1"><b id="stickAvail">0</b>free for gigs right now</span>
+<span class="blob s2">linked to a matric number</span>
+</div>
+</div>
+<div aria-hidden="true" class="marquee"><div class="track" id="ticker"></div></div>
+<section class="block reveal" id="skills">
+<div class="head"><h2>Pick a skill</h2><p>Five things students around campus get hired for. Tap one to see who does it.</p></div>
+<div class="tiles" id="tiles"></div>
+</section>
+<section class="block reveal" hidden="" id="spotWrap">
+<div class="head"><h2>Free for gigs this week</h2><p>These creators said yes to new work. Tap a card for their bio and links.</p></div>
+<div class="spot" id="spot"></div>
+</section>
+<section class="block reveal" id="how">
+<div class="head"><h2>How it works</h2><p>No middleman, no fees. You talk straight to the person doing the work.</p></div>
+<div class="steps">
+<article class="step"><div class="duo"><img alt="" loading="lazy" onerror="this.remove()" src="https://images.unsplash.com/photo-1744320911030-1ab998d994d7?auto=format&fit=crop&w=1200&q=85"/></div>
+<span class="num">1</span><h3>Find your person</h3><p>Search by name or skill, or filter down to people who are free right now.</p></article>
+<article class="step"><div class="duo c2"><img alt="" loading="lazy" onerror="this.remove()" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=85"/></div>
+<span class="num">2</span><h3>Look at the actual work</h3><p>Every card has a cover shot, and a link to their best project is one tap away.</p></article>
+<article class="step"><div class="duo c3"><img alt="" loading="lazy" onerror="this.remove()" src="https://images.unsplash.com/photo-1543501527-49e855165f73?auto=format&fit=crop&w=1200&q=85"/></div>
+<span class="num">3</span><h3>Say hi on WhatsApp</h3><p>Copy their number, agree on a price and a deadline, and get it done.</p></article>
+</div>
+</section>
+<section class="block reveal" id="fresh">
+<div class="head"><h2>Fresh on campulse</h2><p>The newest cards in the directory.</p></div>
+<div class="grid" id="previewGrid"></div>
+<div class="see-all"><a class="btn primary" href="directory.html">See everyone</a></div>
+</section>
+<section class="block why reveal" id="why">
+<div aria-hidden="true" class="why-art">
+<img alt="" class="w1" loading="lazy" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=85"/>
+<img alt="" class="w2" loading="lazy" src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=85"/>
+</div>
+<div class="why-copy">
+<h2>Why people use campulse</h2>
+<ul class="feats">
+<li><span class="fi">1</span><div><h3>Real people, real matric numbers</h3><p>Each profile is tied to one matric number and one login, so there are no anonymous listings.</p></div></li>
+<li><span class="fi">2</span><div><h3>Work you can actually see</h3><p>Cover shots and work links sit right on the card. You judge by the portfolio, not the pitch.</p></div></li>
+<li><span class="fi">3</span><div><h3>Availability that's current</h3><p>Creators flip between free for gigs and busy with exams, so you don't waste time messaging the wrong person.</p></div></li>
+</ul>
+</div>
+</section>
+<section class="block reveal" id="faq">
+<div class="head"><h2>Questions people ask</h2></div>
+<div class="faq">
+<details><summary>Who can join?</summary><p>Any student with a matric number. Sign up, fill in your card, and you're live straight away.</p></details>
+<details><summary>Does it cost anything?</summary><p>No. Browsing and listing are both free.</p></details>
+<details><summary>How do I hire someone?</summary><p>Open their card, copy their WhatsApp number and message them. You agree the price and deadline with them directly. Campulse doesn't take a cut or handle payments.</p></details>
+<details><summary>Can I stop getting messages while I'm in exams?</summary><p>Switch your availability to "Busy with Exams" in your dashboard. Your card stays up, but people can see you're not taking work.</p></details>
+<details><summary>Can I remove my profile?</summary><p>Yes. Delete it from your dashboard and your card and login are gone.</p></details>
+</div>
+</section>
+<section class="block reveal">
+<div class="cta">
+<div><h2>Good at something? Get listed.</h2>
+<p>It's free, it takes about two minutes, and your next client might live down your hallway.</p>
+<a class="btn primary" href="signup.html">Create my profile</a></div>
+<div aria-hidden="true" class="cta-art">
+<figure class="polaroid" style="--rot:-6deg"><img alt="" loading="lazy" src="https://images.unsplash.com/photo-1519457431-44ccd64a579b?auto=format&fit=crop&w=1200&q=85"/></figure>
+<figure class="polaroid" style="--rot:5deg"><img alt="" loading="lazy" src="https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=1200&q=85"/></figure>
+</div>
+</div>
+</section>
+</section></main><footer class="foot">
+<div class="wrap foot-grid">
+<div><a class="brand" href="index.html"><svg class="logo"><use href="#logo"></use></svg>campulse</a>
+<p>Discover &amp; hire verified student talent on campus.</p></div>
+<div><h4>Explore</h4><a href="directory.html">All creators</a><a data-scroll="skills" href="index.html#skills">Skills</a><a data-scroll="faq" href="index.html#faq">FAQ</a></div>
+<div><h4>Join in</h4><a href="signup.html">Create a profile</a><a href="login.html">Log in</a></div>
+<p class="fine">Made on campus, for campus.</p>
+</div>
+</footer><div aria-modal="true" class="modal" id="modal" role="dialog"><div class="sheet" id="modalBody"></div></div><div class="toast" id="toast" role="status"></div><script src="js/app.js" type="module"></script></body></html>
