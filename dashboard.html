@@ -48,8 +48,8 @@
 <label>Work link<input name="work_link" placeholder="https://" type="url"/></label>
 <label>WhatsApp number<input name="whatsapp" required=""/></label>
 <label>Availability<select name="availability"><option>Available for Gigs</option><option>Busy with Exams</option></select></label>
-<label>Profile photo URL<input name="avatar_url" placeholder="https://" type="url"/></label>
-<label class="full">Cover image URL<input name="cover_url" placeholder="https://" type="url"/></label>
+<div class="uploader full" data-kind="avatar"><span>Profile photo <small>optional, JPG, PNG or WebP</small></span><div class="u-row"><div class="u-box round"><img class="u-preview" alt="" hidden/><span class="u-empty">No image yet</span></div><div class="u-actions"><button class="btn ghost u-pick" type="button">Choose image</button><button class="btn ghost u-remove" type="button" hidden>Remove</button></div></div><input accept="image/jpeg,image/png,image/webp" hidden type="file"/></div>
+<div class="uploader full" data-kind="cover"><span>Cover image <small>optional, shown at 16:9</small></span><div class="u-row"><div class="u-box wide"><img class="u-preview" alt="" hidden/><span class="u-empty">No image yet</span></div><div class="u-actions"><button class="btn ghost u-pick" type="button">Choose image</button><button class="btn ghost u-remove" type="button" hidden>Remove</button></div></div><input accept="image/jpeg,image/png,image/webp" hidden type="file"/></div>
 </div>
 <button class="btn primary wide" type="submit">Save changes</button>
 </form>

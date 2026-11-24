@@ -1,13 +1,10 @@
-// ui.js — shared helpers: icons, theme, nav, toast, modal, clipboard, saved profiles, card templates.
 import { SKILLS, SKILL_META, AVAILABLE } from './config.js';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 
-// Escape user text before putting it in innerHTML (prevents XSS).
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// Only allow http(s) links, so a "javascript:" URL can never be clicked.
 export const safeUrl = (u) => {
   try {
     const x = new URL(u);
@@ -15,7 +12,6 @@ export const safeUrl = (u) => {
   } catch { return ''; }
 };
 
-/* ---------- Icons (tiny inline SVG set, so there are no icon libraries to load) ---------- */
 const PATHS = {
   heart: '<path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
@@ -31,7 +27,6 @@ const PATHS = {
 export const icon = (n) =>
   `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[n] || ''}</svg>`;
 
-/* ---------- Theme (light / dark) persisted in localStorage ---------- */
 export function initTheme() {
   const btn = $('#themeBtn');
   if (!btn) return;
@@ -45,7 +40,6 @@ export function initTheme() {
   btn.addEventListener('click', () => apply(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
 }
 
-/* ---------- Mobile menu ---------- */
 export function initNav() {
   const btn = $('#menuBtn'), nav = $('.nav');
   if (!btn || !nav) return;
@@ -59,12 +53,10 @@ export function initNav() {
   nav.addEventListener('click', (e) => { if (e.target.closest('a, [data-signout], [data-scroll]')) set(false); });
 }
 
-/* ---------- Scroll reveal for landing sections ---------- */
 export function initReveal() {
   const targets = document.querySelectorAll('.reveal');
   if (!targets.length) return;
-  // Keep content visible if the browser lacks IntersectionObserver. Only hide for
-  // animation after the observer is successfully initialized.
+
   if (!('IntersectionObserver' in window)) {
     targets.forEach((el) => el.classList.add('in'));
     return;
@@ -81,7 +73,6 @@ export function initReveal() {
   }
 }
 
-/* ---------- Toast / loading button ---------- */
 let toastTimer;
 export function toast(msg, type = 'ok') {
   const t = $('#toast');
@@ -93,7 +84,6 @@ export function toast(msg, type = 'ok') {
 }
 export const busy = (btn, on) => { btn.disabled = on; btn.classList.toggle('loading', on); };
 
-/* ---------- Modal (one shared container; CSS handles the transition) ---------- */
 export function openModal(html) {
   $('#modalBody').innerHTML = html;
   $('#modal').classList.add('open');
@@ -114,10 +104,9 @@ export function initModal() {
   addEventListener('keydown', (e) => e.key === 'Escape' && closeModal());
 }
 
-/* ---------- Clipboard with instant "Copied!" feedback ---------- */
 export async function copyText(text, btn) {
   try { await navigator.clipboard.writeText(text); }
-  catch { // fallback for older browsers / non-https
+  catch {
     const t = document.createElement('textarea');
     t.value = text; document.body.append(t); t.select(); document.execCommand('copy'); t.remove();
   }
@@ -128,19 +117,17 @@ export async function copyText(text, btn) {
   }
 }
 
-/* ---------- Saved profiles (the heart button), kept in this browser only ---------- */
 const SAVED_KEY = 'campulse-saved';
 export const getSaved = () => { try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || []; } catch { return []; } };
 export function toggleSaved(id) {
   const s = new Set(getSaved());
   const on = !s.has(id);
   on ? s.add(id) : s.delete(id);
-  try { localStorage.setItem(SAVED_KEY, JSON.stringify([...s])); } catch { /* storage blocked */ }
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify([...s])); } catch {  }
   dispatchEvent(new CustomEvent('saved-change'));
   return on;
 }
 
-/* ---------- Misc ---------- */
 export function fillSkills(select) {
   select.innerHTML = SKILLS.map((s) => `<option>${esc(s)}</option>`).join('');
 }
@@ -154,9 +141,7 @@ export function animateNumber(el, to) {
   requestAnimationFrame(tick);
 }
 
-/* ---------- Profile card pieces ---------- */
-// No image URL? We use a stable stand-in based on the student's id. A broken image falls back to a colour block.
-export const avatarOf = (p) => safeUrl(p.avatar_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.full_name || 'Student')}&background=2340ff&color=ffffff&size=240&bold=true`; 
+export const avatarOf = (p) => safeUrl(p.avatar_url) || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.full_name || 'Student')}&background=2340ff&color=ffffff&size=240&bold=true`;
 export const coverOf = (p) => safeUrl(p.cover_url) || SKILL_META[p.skill]?.img || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85';
 
 export const badge = (a) =>
@@ -193,7 +178,6 @@ export const skeletons = (n = 6) =>
     <div class="skel line w60"></div><div class="skel line w30"></div><div class="skel line"></div><div class="skel line w80"></div>
   </div></div>`).join('');
 
-/* ---------- "View work" modal ---------- */
 export function showProfileModal(p) {
   const link = safeUrl(p.work_link);
   const wa = String(p.whatsapp || '').replace(/\D/g, '');
@@ -215,8 +199,6 @@ export function showProfileModal(p) {
     </div>`);
 }
 
-// Event delegation: ONE listener per container handles every card's buttons.
-// `lookup(id)` returns the profile object for a card id.
 export function bindCardActions(root, lookup) {
   root.addEventListener('click', (e) => {
     const v = e.target.closest('[data-view]');
@@ -228,7 +210,7 @@ export function bindCardActions(root, lookup) {
       const on = toggleSaved(f.dataset.fav);
       f.classList.toggle('on', on);
       f.setAttribute('aria-pressed', on);
-      f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');   // restart the pop animation
+      f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
     }
   });
 }

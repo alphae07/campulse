@@ -1,11 +1,11 @@
-// auth.js — sign up, log in (email OR matric number), sign out.
 import { supabase } from './supabaseClient.js';
 import { $, toast, busy } from './ui.js';
+import { uploadProfileImage, getUploader, clearUploaders } from './images.js';
 
 export function initAuth() {
   $('#signupForm')?.addEventListener('submit', onSignup);
   $('#loginForm')?.addEventListener('submit', onLogin);
-  // Any element with data-signout (nav button, dashboard button) signs the user out.
+
   document.addEventListener('click', (e) => { if (e.target.closest('[data-signout]')) logout(); });
 }
 
@@ -19,21 +19,39 @@ async function onSignup(e) {
   if (f.password.length < 8) return toast('Password must be at least 8 characters.', 'err');
   if (!/^\+?\d[\d\s-]{7,}$/.test(f.whatsapp.trim())) return toast('Enter a valid WhatsApp number, e.g. +234 801 234 5678.', 'err');
 
+  const avatarFile = getUploader(form, 'avatar').file;
+  const coverFile = getUploader(form, 'cover').file;
   busy(btn, true);
-  // Everything except email/password travels as metadata; a database trigger turns it
-  // into the `profiles` row (id = the new user's auth id). See supabase/schema.sql.
+
   const { email, password, ...meta } = f;
   const { data, error } = await supabase.auth.signUp({ email, password, options: { data: meta } });
-  busy(btn, false);
 
   if (error) {
+    busy(btn, false);
     const dup = /database error|duplicate|unique/i.test(error.message);
     return toast(dup ? 'That matric number is already registered.' : error.message, 'err');
   }
+  let imagesFailed = false;
+  if (data.session && (avatarFile || coverFile)) {
+    try {
+      const patch = {};
+      if (avatarFile) patch.avatar_url = await uploadProfileImage(data.user.id, avatarFile, 'avatar');
+      if (coverFile) patch.cover_url = await uploadProfileImage(data.user.id, coverFile, 'cover');
+      const { error: patchError } = await supabase.from('profiles').update(patch).eq('id', data.user.id);
+      if (patchError) throw patchError;
+    } catch {
+      imagesFailed = true;
+    }
+  }
+  busy(btn, false);
   form.reset();
-  if (!data.session) {                       // "Confirm email" is ON in Supabase
-    toast('Almost there! Confirm your email, then log in.');
+  clearUploaders(form);
+  if (!data.session) {
+    toast(avatarFile || coverFile ? 'Almost there! Confirm your email, log in, then add your photos from your dashboard.' : 'Almost there! Confirm your email, then log in.');
     location.href = 'login.html';
+  } else if (imagesFailed) {
+    toast('Profile created, but your images did not upload. Add them from your dashboard.', 'err');
+    setTimeout(() => { location.href = 'dashboard.html'; }, 1800);
   } else {
     toast('Welcome to Campulse! Your profile is live.');
     location.href = 'dashboard.html';
@@ -48,7 +66,7 @@ async function onLogin(e) {
 
   let email = identifier.trim();
   if (!email.includes('@')) {
-    // Matric number → ask the database (safe RPC function) for the matching email.
+
     const { data, error } = await supabase.rpc('email_for_matric', { p_matric: email });
     if (error || !data) { busy(btn, false); return toast('Wrong matric number or password.', 'err'); }
     email = data;

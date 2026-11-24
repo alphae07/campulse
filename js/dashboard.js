@@ -1,8 +1,7 @@
-// dashboard.js — "My Dashboard": preview, availability toggle, profile strength, UPDATE and DELETE.
-// Every query is filtered by the logged-in user's id AND protected again by RLS on the server.
 import { supabase } from './supabaseClient.js';
 import { AVAILABLE, BUSY } from './config.js';
 import { $, profileCard, bindCardActions, toast, openModal, closeModal, safeUrl, busy, fillSkills } from './ui.js';
+import { uploadProfileImage, removeImageByUrl, removeAllUserImages, getUploader, showUploader } from './images.js';
 
 let me = null, bound = false;
 
@@ -15,7 +14,6 @@ export async function loadDashboard(user) {
   if (!bound) { bind(); bound = true; }
 }
 
-// Re-draw everything from the `me` object.
 function paint() {
   $('#dashHi').textContent = `Hi ${me.full_name.split(' ')[0]}. Keep your card fresh and tell campus when you're free.`;
   $('#dashPreview').innerHTML = profileCard(me, 0, { fav: false });
@@ -24,11 +22,12 @@ function paint() {
   const form = $('#editForm');
   fillSkills(form.elements.skill);
   for (const el of form.elements) if (el.name && me[el.name] !== undefined) el.value = me[el.name] ?? '';
+  showUploader(form, 'avatar', me.avatar_url);
+  showUploader(form, 'cover', me.cover_url);
   $('#matricShown').textContent = me.matric_no;
   strength();
 }
 
-// Profile strength: 5 checks worth 20% each, plus a tip for the first thing missing.
 function strength() {
   const checks = [
     [me.avatar_url, 'Add a profile photo so people recognise you.'],
@@ -44,7 +43,6 @@ function strength() {
   $('#meterTip').textContent = next ? next[1] : 'Your profile is complete. Nice work.';
 }
 
-// Shared UPDATE helper.
 async function save(changes) {
   const { data, error } = await supabase.from('profiles').update(changes).eq('id', me.id).select().single();
   if (error) { toast(error.message, 'err'); return false; }
@@ -54,28 +52,40 @@ async function save(changes) {
 function bind() {
   bindCardActions($('#dashPreview'), () => me);
 
-  // Quick availability toggle.
   $('#availToggle').addEventListener('change', async (e) => {
     const ok = await save({ availability: e.target.checked ? AVAILABLE : BUSY });
     if (ok) toast(`You're now: ${me.availability}`); else e.target.checked = !e.target.checked;
   });
 
-  // Full edit form.
   $('#editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target)), btn = e.target.querySelector('[type=submit]');
     if (f.work_link && !safeUrl(f.work_link)) return toast('Work link must start with http:// or https://', 'err');
+    const form = e.target;
+    const avatar = getUploader(form, 'avatar'), cover = getUploader(form, 'cover');
+    const previous = { avatar: me.avatar_url, cover: me.cover_url };
     busy(btn, true);
-    const ok = await save({
-      full_name: f.full_name.trim(), skill: f.skill, bio: f.bio.trim(), whatsapp: f.whatsapp.trim(),
-      availability: f.availability, work_link: f.work_link.trim() || null,
-      avatar_url: f.avatar_url.trim() || null, cover_url: f.cover_url.trim() || null,
-    });
+    try {
+      const changes = {
+        full_name: f.full_name.trim(), skill: f.skill, bio: f.bio.trim(), whatsapp: f.whatsapp.trim(),
+        availability: f.availability, work_link: f.work_link.trim() || null,
+      };
+      if (avatar.file) changes.avatar_url = await uploadProfileImage(me.id, avatar.file, 'avatar');
+      else if (avatar.removed) changes.avatar_url = null;
+      if (cover.file) changes.cover_url = await uploadProfileImage(me.id, cover.file, 'cover');
+      else if (cover.removed) changes.cover_url = null;
+      const ok = await save(changes);
+      if (ok) {
+        if ('avatar_url' in changes && previous.avatar) removeImageByUrl(previous.avatar);
+        if ('cover_url' in changes && previous.cover) removeImageByUrl(previous.cover);
+        toast('Changes saved.');
+      }
+    } catch (err) {
+      toast(err.message, 'err');
+    }
     busy(btn, false);
-    if (ok) toast('Changes saved.');
   });
 
-  // Delete with a confirmation modal.
   $('#deleteBtn').addEventListener('click', () => {
     openModal(`
       <div class="m-body confirm">
@@ -85,9 +95,10 @@ function bind() {
         <button class="btn danger" id="confirmDel">Delete profile</button></div>
       </div>`);
     $('#confirmDel').onclick = async () => {
-      const { error } = await supabase.from('profiles').delete().eq('id', me.id);   // RLS: own row only
+      await removeAllUserImages(me.id).catch(() => {});
+      const { error } = await supabase.from('profiles').delete().eq('id', me.id);
       if (error) return toast(error.message, 'err');
-      await supabase.rpc('delete_my_account');       // also remove the login itself
+      await supabase.rpc('delete_my_account');
       await supabase.auth.signOut();
       closeModal(); toast('Profile deleted.'); location.href = 'index.html';
     };
