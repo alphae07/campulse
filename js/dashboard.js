@@ -1,5 +1,3 @@
-// dashboard.js — "My Dashboard": preview, availability toggle, profile strength, UPDATE and DELETE.
-// Every query is filtered by the logged-in user's id AND protected again by RLS on the server.
 import { supabase } from './supabaseClient.js';
 import { AVAILABLE, BUSY } from './config.js';
 import { $, profileCard, bindCardActions, toast, openModal, closeModal, safeUrl, busy, fillSkills } from './ui.js';
@@ -15,7 +13,7 @@ export async function loadDashboard(user) {
   if (!bound) { bind(); bound = true; }
 }
 
-// Re-draw everything from the `me` object.
+
 function paint() {
   $('#dashHi').textContent = `Hi ${me.full_name.split(' ')[0]}. Keep your card fresh and tell campus when you're free.`;
   $('#dashPreview').innerHTML = profileCard(me, 0, { fav: false });
@@ -28,7 +26,6 @@ function paint() {
   strength();
 }
 
-// Profile strength: 5 checks worth 20% each, plus a tip for the first thing missing.
 function strength() {
   const checks = [
     [me.avatar_url, 'Add a profile photo so people recognise you.'],
@@ -44,7 +41,6 @@ function strength() {
   $('#meterTip').textContent = next ? next[1] : 'Your profile is complete. Nice work.';
 }
 
-// Shared UPDATE helper.
 async function save(changes) {
   const { data, error } = await supabase.from('profiles').update(changes).eq('id', me.id).select().single();
   if (error) { toast(error.message, 'err'); return false; }
@@ -54,13 +50,11 @@ async function save(changes) {
 function bind() {
   bindCardActions($('#dashPreview'), () => me);
 
-  // Quick availability toggle.
   $('#availToggle').addEventListener('change', async (e) => {
     const ok = await save({ availability: e.target.checked ? AVAILABLE : BUSY });
     if (ok) toast(`You're now: ${me.availability}`); else e.target.checked = !e.target.checked;
   });
 
-  // Full edit form.
   $('#editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target)), btn = e.target.querySelector('[type=submit]');
@@ -75,7 +69,7 @@ function bind() {
     if (ok) toast('Changes saved.');
   });
 
-  // Delete with a confirmation modal.
+
   $('#deleteBtn').addEventListener('click', () => {
     openModal(`
       <div class="m-body confirm">
@@ -85,9 +79,9 @@ function bind() {
         <button class="btn danger" id="confirmDel">Delete profile</button></div>
       </div>`);
     $('#confirmDel').onclick = async () => {
-      const { error } = await supabase.from('profiles').delete().eq('id', me.id);   // RLS: own row only
+      const { error } = await supabase.from('profiles').delete().eq('id', me.id);   
       if (error) return toast(error.message, 'err');
-      await supabase.rpc('delete_my_account');       // also remove the login itself
+      await supabase.rpc('delete_my_account');       
       await supabase.auth.signOut();
       closeModal(); toast('Profile deleted.'); location.href = 'index.html';
     };
