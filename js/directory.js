@@ -5,8 +5,9 @@ import { SKILLS, SKILL_META, AVAILABLE, SUPABASE_CONFIGURED } from './config.js'
 import { $, esc, profileCard, skeletons, bindCardActions, animateNumber, toast, getSaved, coverOf, badge } from './ui.js';
 
 let all = [];                                      // every profile from the database
+let previewProfilesCache = [];
 const state = { q: '', skill: new URLSearchParams(location.search).get('skill') || 'All', onlyAvail: false, saved: false, sort: 'new' };
-const lookup = (id) => all.find((p) => p.id === id);
+const lookup = (id) => all.find((p) => p.id === id) || previewProfilesCache.find((p) => p.id === id);
 
 export function initDirectory() {
   // Filter pills
@@ -61,6 +62,8 @@ function resetFilters() {
 function updateSavedCount() { $('#savedCount').textContent = getSaved().length; }
 
 // Called every time the landing page opens, so edits made in the dashboard show up.
+// The landing preview is fetched independently from the full directory: a failure in
+// the directory query must not prevent previewGrid from rendering cards.
 export async function loadDirectory() {
   if ($('#grid')) $('#grid').innerHTML = skeletons(6);
   if ($('#previewGrid')) $('#previewGrid').innerHTML = skeletons(3);
@@ -77,18 +80,40 @@ export async function loadDirectory() {
     return;
   }
 
-  try {
-    // Fetch the full directory and the landing-page preview independently. The preview
-    // is capped at three and ordered newest-first, so it isn't dependent on client slicing.
-    const [directoryResult, previewResult] = await Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: false, nullsFirst: false }),
-      supabase.from('profiles').select('*').order('created_at', { ascending: false, nullsFirst: false }).limit(3)
-    ]);
-    const error = directoryResult.error || previewResult.error;
-    if (error) throw error;
 
+  const orderNewest = (query) => query.order('created_at', { ascending: false, nullsFirst: false }).limit(3);
+  const previewRender = (profiles) => {
+    if (!$('#previewGrid')) return;
+    if (!profiles.length) {
+      $('#previewGrid').innerHTML = `<div class="empty"><p>No student profiles yet. Be the first to create a Campulse profile.</p><a class="btn primary" href="signup.html">Create a profile</a></div>`;
+      return;
+    }
+    $('#previewGrid').innerHTML = profiles.map((p, i) => profileCard(p, i)).join('');
+  };
+
+
+  try {
+    // Load the preview first and independently so it can render even if the
+    // directory query fails. Retry without ordering if created_at isn't present.
+    let previewResult = await orderNewest(supabase.from('profiles').select('*'));
+    if (previewResult.error) previewResult = await supabase.from('profiles').select('*').limit(3);
+    if (previewResult.error) throw previewResult.error;
+    const previewProfiles = Array.isArray(previewResult.data) ? previewResult.data : [];
+    previewProfilesCache = previewProfiles;
+    previewRender(previewProfiles);
+  } catch (previewErr) {
+    console.error('[Campulse] Preview profiles failed:', previewErr);
+    if ($('#previewGrid')) $('#previewGrid').innerHTML = `<div class="empty"><p>We couldn't load the newest student profiles right now.</p><button class="btn ghost" data-retry-directory>Try again</button></div>`;
+    if ($('#previewGrid')) $('#previewGrid').onclick = (e) => { if (e.target.closest('[data-retry-directory]')) loadDirectory(); };
+  }
+
+  try {
+    // Full directory is independent from preview. Use created_at ordering, with
+    // a fallback query if the schema doesn't yet have that column.
+    let directoryResult = await supabase.from('profiles').select('*').order('created_at', { ascending: false, nullsFirst: false });
+    if (directoryResult.error) directoryResult = await supabase.from('profiles').select('*');
+    if (directoryResult.error) throw directoryResult.error;
     all = Array.isArray(directoryResult.data) ? directoryResult.data : [];
-    const newest = Array.isArray(previewResult.data) ? previewResult.data : [];
     const open = all.filter((p) => p.availability === AVAILABLE);
     if ($('#statTotal')) animateNumber($('#statTotal'), all.length);
     if ($('#statAvail')) animateNumber($('#statAvail'), open.length);
@@ -98,18 +123,11 @@ export async function loadDirectory() {
       const countEl = $(`[data-count="${s}"]`); if (countEl) countEl.textContent = `${n} ${n === 1 ? 'creator' : 'creators'}`;
     });
     if ($('#spotWrap')) renderSpotlight(open);
-    if ($('#previewGrid')) {
-      $('#previewGrid').innerHTML = newest.length
-        ? newest.map((p, i) => profileCard(p, i)).join('')
-        : `<div class="empty"><p>No student profiles yet. Be the first to create a Campulse profile.</p><a class="btn primary" href="signup.html">Create a profile</a></div>`;
-    }
     render();
-  } catch (err) {
-    console.error('[Campulse] Directory loading failed:', err);
-    const errorMessage = `<div class="empty"><p>We couldn't load student profiles right now. Please check your connection and try again.</p><button class="btn ghost" data-retry-directory>Try again</button></div>`;
-    if ($('#grid')) $('#grid').innerHTML = errorMessage;
-    if ($('#previewGrid')) $('#previewGrid').innerHTML = errorMessage;
-    if ($('#previewGrid')) $('#previewGrid').onclick = (e) => { if (e.target.closest('[data-retry-directory]')) loadDirectory(); };
+  } catch (directoryErr) {
+    console.error('[Campulse] Directory loading failed:', directoryErr);
+    if ($('#grid')) $('#grid').innerHTML = `<div class="empty"><p>We couldn't load the full directory right now. Please check your connection and try again.</p><button class="btn ghost" data-retry-directory>Try again</button></div>`;
+    if ($('#grid')) $('#grid').onclick = (e) => { if (e.target.closest('[data-retry-directory]')) loadDirectory(); };
     toast('Unable to load Campulse profiles. Check your Supabase setup and connection.', 'err');
   }
 }
