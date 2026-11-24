@@ -1,22 +1,19 @@
-// directory.js — everything data-driven on the landing page:
-// skill tiles, spotlight row, stats, search, filters, sorting, saved profiles, the card grid.
 import { supabase } from './supabaseClient.js';
 import { SKILLS, SKILL_META, AVAILABLE, SUPABASE_CONFIGURED } from './config.js';
 import { $, esc, profileCard, skeletons, bindCardActions, animateNumber, toast, getSaved, coverOf, badge } from './ui.js';
 
-let all = [];                                      // every profile from the database
+let all = [];
 let previewProfilesCache = [];
 const state = { q: '', skill: new URLSearchParams(location.search).get('skill') || 'All', onlyAvail: false, saved: false, sort: 'new' };
 const lookup = (id) => all.find((p) => p.id === id) || previewProfilesCache.find((p) => p.id === id);
 
 export function initDirectory() {
-  // Filter pills
+
   if ($('#pills')) {
     $('#pills').innerHTML = ['All', ...SKILLS].map((s) => `<button class="pill${s === state.skill ? ' active' : ''}" data-skill="${esc(s)}">${esc(s)}</button>`).join('');
     $('#pills').addEventListener('click', (e) => { const b = e.target.closest('.pill'); if (b) setSkill(b.dataset.skill); });
   }
 
-  // "Pick a skill" tiles (counts are filled in after the data loads)
   if ($('#tiles')) { $('#tiles').innerHTML = SKILLS.map((s) => `
     <button class="tile" data-skill="${esc(s)}" style="--tc:${SKILL_META[s].color}">
       <img src="${esc(SKILL_META[s].img)}" alt="" loading="lazy" onerror="this.remove()">
@@ -27,13 +24,11 @@ export function initDirectory() {
     location.href = `directory.html?skill=${encodeURIComponent(t.dataset.skill)}`;
   }); }
 
-  // Scrolling ticker (the list is doubled so the loop is seamless)
   const star = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 1l2.6 7.4L22 11l-7.4 2.6L12 21l-2.6-7.4L2 11l7.4-2.6z" fill="currentColor"/></svg>';
   const words = [...SKILLS, 'Linked to a matric number', 'Say hi on WhatsApp'];
   const row = words.map((w) => `<span>${esc(w)}</span>${star}`).join('');
   if ($('#ticker')) $('#ticker').innerHTML = row + row;
 
-  // Controls
   $('#search')?.addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); render(); });
   $('#onlyAvail')?.addEventListener('change', (e) => { state.onlyAvail = e.target.checked; render(); });
   $('#onlySaved')?.addEventListener('change', (e) => { state.saved = e.target.checked; render(); });
@@ -59,11 +54,8 @@ function resetFilters() {
   setSkill('All');
 }
 
-function updateSavedCount() { $('#savedCount').textContent = getSaved().length; }
+function updateSavedCount() { const el = $('#savedCount'); if (el) el.textContent = getSaved().length; }
 
-// Called every time the landing page opens, so edits made in the dashboard show up.
-// The landing preview is fetched independently from the full directory: a failure in
-// the directory query must not prevent previewGrid from rendering cards.
 export async function loadDirectory() {
   if ($('#grid')) $('#grid').innerHTML = skeletons(6);
   if ($('#previewGrid')) $('#previewGrid').innerHTML = skeletons(3);
@@ -80,7 +72,6 @@ export async function loadDirectory() {
     return;
   }
 
-
   const orderNewest = (query) => query.order('created_at', { ascending: false, nullsFirst: false }).limit(3);
   const previewRender = (profiles) => {
     if (!$('#previewGrid')) return;
@@ -91,10 +82,8 @@ export async function loadDirectory() {
     $('#previewGrid').innerHTML = profiles.map((p, i) => profileCard(p, i)).join('');
   };
 
-
   try {
-    // Load the preview first and independently so it can render even if the
-    // directory query fails. Retry without ordering if created_at isn't present.
+
     let previewResult = await orderNewest(supabase.from('profiles').select('*'));
     if (previewResult.error) previewResult = await supabase.from('profiles').select('*').limit(3);
     if (previewResult.error) throw previewResult.error;
@@ -108,8 +97,7 @@ export async function loadDirectory() {
   }
 
   try {
-    // Full directory is independent from preview. Use created_at ordering, with
-    // a fallback query if the schema doesn't yet have that column.
+
     let directoryResult = await supabase.from('profiles').select('*').order('created_at', { ascending: false, nullsFirst: false });
     if (directoryResult.error) directoryResult = await supabase.from('profiles').select('*');
     if (directoryResult.error) throw directoryResult.error;
@@ -132,7 +120,6 @@ export async function loadDirectory() {
   }
 }
 
-// "Open for gigs this week": big poster cards for people who are free right now.
 function renderSpotlight(open) {
   if (!$('#spotWrap') || !$('#spot')) return;
   $('#spotWrap').hidden = !open.length;
@@ -156,7 +143,7 @@ function render() {
   if ($('#count')) $('#count').textContent = `${list.length} ${list.length === 1 ? 'creator' : 'creators'}`;
   if (!$('#grid')) return;
   $('#grid').innerHTML = list.length
-    ? list.map((p, i) => profileCard(p, i)).join('')        // --i drives the staggered entrance delay
+    ? list.map((p, i) => profileCard(p, i)).join('')
     : `<div class="empty"><p>${state.saved ? 'Nothing saved yet. Tap the heart on a card to keep someone for later.' : 'Nobody matches that search.'}</p>
        <button class="btn ghost" data-reset>Clear filters</button></div>`;
 }
